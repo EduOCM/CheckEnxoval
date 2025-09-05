@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Enxoval</title>
+  <link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <ul class="menu">
+        <li>
+          <a href="">Móveis Casa</a>
+          <ul class="submenu">
+            <li><a href="" onclick="abrirAmbiente('cozinha')">Cozinha</a></li>
+            <li><a href="" onclick="abrirAmbiente('quarto')">Quarto</a></li>
+            <li><a href="" onclick="abrirAmbiente('sala')">Sala de Estar</a></li>
+            <li><a href="" onclick="abrirAmbiente('banheiro')">Banheiro</a></li>
+          </ul>
+        </li>
+        <li>
+            <a href="#"></a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Meu Enxoval</h1>
+
+    <!-- Tela de cada ambiente -->
+    <div id="ambienteAtual" style="display:none;">
+      <button onclick="voltar()">⬅ Voltar</button>
+      <h2 id="tituloAmbiente"></h2>
+
+      <div id="formulario">
+        <input type="text" id="nomeproduto" placeholder="Nome do produto">
+        <input type="number" id="orcamento" placeholder="Orçamento">
+        <input type="number" id="valorfinal" placeholder="Valor final">
+        <input type="number" id="quantidade" placeholder="Quantidade">
+        <input type="text" id="linkreferencia" placeholder="Link da Loja Referencia">
+        <input type="text" id="linkcompra" placeholder="Link da Compra">
+        <button onclick="adicionarProduto()">Adicionar</button>
+      </div>
+
+      <h3>Lista de produtos</h3>
+      <div id="lista"></div>
+    </div>
+  </main>
+
+  <!--<script src="js/script.js"></script>-->
+  <script src="js/storage.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/produtos.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

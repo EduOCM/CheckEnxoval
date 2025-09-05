@@ -1,0 +1,88 @@
+/* Barra de navegação */
+header {
+    background: #4CAF50;
+    padding: 10px;
+    position: fixed;   /* fixa no topo */
+    top: 0;
+    left: 0;
+    width: 100%;       /* ocupa toda a largura */
+    z-index: 1000;     /* fica na frente do conteúdo */
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Dá espaço no topo pro conteúdo não ficar escondido atrás do menu */
+  main {
+    padding: 80px 20px 20px 20px;
+  }
+  
+  .menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .menu > li {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .menu > li > a {
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+  }
+  
+  .menu > li > a:hover {
+    background: #45a049;
+  }
+  
+  /* Submenu suspenso */
+  .submenu {
+    display: none;
+    position: absolute;
+    background: white;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 160px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  
+  .submenu li a {
+    color: #333;
+    padding: 10px;
+    text-decoration: none;
+    display: block;
+  }
+  
+  .submenu li a:hover {
+    background: #f0f0f0;
+  }
+  
+  /* Mostrar submenu ao passar o mouse */
+  .menu li:hover .submenu {
+    display: block;
+  }
+  
+  #lista div {
+  background: white;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  #lista button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  }
