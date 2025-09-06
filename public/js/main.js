@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 prioridade: false
             };
 
-            if (produto.nome.trim() !== "") {
+            if ((produto.nomeproduto || "").trim() !== "") {
                 adicionarProduto(produto);
                 form.reset();
             }
