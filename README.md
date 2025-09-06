@@ -17,7 +17,7 @@ Será um projeto pessoal, para melhorar o acompanhamento do Enxoval
   - `DELETE /api/produtos/{id}`
 
 
-## Como rodar o projeto
+## Como rodar a api
   ```bash
     git clone https://github.com/eduocm/checkenxoval
 
