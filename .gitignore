@@ -1,1 +1,16 @@
-produtos.db
+# Nome do arquivo: .gitignore
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Flask instance data (SQLite, etc.)
+api/instance/
+*.db
+
+# Node/Frontend (caso venha a usar)
+node_modules/
+
+# SO
+.DS_Store
+Thumbs.db
