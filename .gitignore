@@ -1,16 +1,22 @@
-# Nome do arquivo: .gitignore
-# Python
+# Python / venv / cache
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
 
-# Flask instance data (SQLite, etc.)
-api/instance/
+# Banco local / instâncias
 *.db
+instance/
+api/instance/
 
-# Node/Frontend (caso venha a usar)
+# Front (se usar futuramente)
 node_modules/
+dist/
+build/
 
-# SO
+# SO / editor
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/

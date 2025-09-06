@@ -60,36 +60,32 @@ async function apiRemover(id) {
 
 // -------- UI --------
 function renderizarProdutos() {
-  if (!window.ambienteAtual) return;
+  if (!ambienteAtual) return;
   if (!produtos[ambienteAtual]) produtos[ambienteAtual] = [];
 
-  const lista = document.getElementById('lista');
+  const lista = document.getElementById("lista");
   if (!lista) return;
 
-  lista.innerHTML = '';
+  lista.innerHTML = "";
   produtos[ambienteAtual].forEach((p, index) => {
-    const orc = Number(p.orcamento || 0);
-    const val = Number(p.valorfinal || 0);
-    const qtd = Number(p.quantidade || 0);
-
     lista.innerHTML += `
-      <div class="item">
-        <strong>${p.nomeproduto || '(sem nome)'}</strong>
-        <div>Orçamento: R$${isNaN(orc)?0:orc} | Final: R$${isNaN(val)?0:val} | Qtd: ${isNaN(qtd)?0:qtd}</div>
-        <div class="links">
-          ${p.linkreferencia ? `<a href="${p.linkreferencia}" target="_blank">link referência</a>` : ''}
-          ${p.linkcompra ? `<a href="${p.linkcompra}" target="_blank">link compra</a>` : ''}
-        </div>
-        <div class="acoes">
-          <button onclick="marcarComprado(${index})">${p.comprado ? '✅ Comprado' : '⏳ Pendente'}</button>
-          <button onclick="marcarPrioridade(${index})">${p.prioridade ? '📈 Máxima' : '📉 Mínima'}</button>
-          <button onclick="editarProduto(${index})">✏️ Editar</button>
-          <button onclick="excluirProduto(${index})">❌ Excluir</button>
-        </div>
+      <div>
+        <strong>${p.nomeproduto}</strong> - R$${p.orcamento || 0} / R$${p.valorfinal || 0}
+        <strong>${p.quantidade || 1}x</strong>
+        ${p.linkreferencia ? `<a href="${p.linkreferencia}" target="_blank">link referência</a>` : ""}
+        ${p.linkcompra ? `<a href="${p.linkcompra}" target="_blank">link compra</a>` : ""}
+        <button onclick="marcarComprado(${index})">${p.comprado ? "✅ Comprado" : "⏳ Pendente"}</button>
+        <button onclick="marcarPrioridade(${index})">${p.prioridade ? "📈 Máxima" : "📉 Mínima"}</button>
+        <button onclick="excluirProduto(${index})">❌ Excluir</button>
+        <button onclick="editarProduto(${index})">✏️ Editar</button>
       </div>
     `;
   });
+
+  // 🔽 atualiza o resumo
+  renderizarResumo();
 }
+
 
 function adicionarProduto(produto) {
   if (!window.ambienteAtual) return;
@@ -227,3 +223,75 @@ window.marcarComprado    = marcarComprado;
 window.marcarPrioridade  = marcarPrioridade;
 window.excluirProduto    = excluirProduto;
 window.editarProduto     = editarProduto;
+
+function parseNumero(v) {
+  if (v === undefined || v === null || v === "") return 0;
+  if (typeof v === "string") v = v.replace(".", "").replace(",", ".");
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+
+function formatBRL(n) {
+  try {
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  } catch {
+    return `R$ ${Number(n).toFixed(2).replace(".", ",")}`;
+  }
+}
+
+function calcularResumo(ambiente) {
+  const lista = produtos[ambiente] || [];
+  let totalOrc = 0;       // soma de todos os orçamentos
+  let totalFinal = 0;     // soma de valor final SOMENTE dos itens com final > 0
+  let variacaoComprados = 0; // soma de (orcamento - valorfinal) para quem tem final > 0
+  let itens = 0;
+  let comprados = 0;
+
+  for (const p of lista) {
+    const orc = parseNumero(p.orcamento);
+    const fin = parseNumero(p.valorfinal);
+
+    totalOrc += orc;
+    if (fin > 0) {
+      totalFinal += fin;
+      variacaoComprados += (orc - fin);
+    }
+
+    itens += 1;
+    if (p.comprado) comprados += 1;
+  }
+
+  const saldo = totalOrc - totalFinal;
+  const percent = itens > 0 ? Math.round((comprados / itens) * 100) : 0;
+
+  return { totalOrc, totalFinal, saldo, itens, comprados, percent, variacaoComprados };
+}
+
+function renderizarResumo() {
+  const wrap = document.getElementById("resumoAmbiente");
+  if (!wrap || !ambienteAtual) return;
+
+  const { totalOrc, totalFinal, saldo, itens, comprados, percent, variacaoComprados } =
+    calcularResumo(ambienteAtual);
+
+  wrap.style.display = (itens > 0) ? "block" : "none";
+
+  const el = (id) => document.getElementById(id);
+  if (el("res_orcamento")) el("res_orcamento").innerText = formatBRL(totalOrc);
+  if (el("res_final")) el("res_final").innerText = formatBRL(totalFinal);
+  if (el("res_saldo")) {
+    el("res_saldo").innerText = formatBRL(saldo);
+    el("res_saldo").style.color = saldo >= 0 ? "#2e7d32" : "#c62828";
+  }
+  if (el("res_itens")) el("res_itens").innerText = `${comprados} / ${itens} comprados`;
+  if (el("res_percent")) el("res_percent").innerText = `${percent}%`;
+  if (el("res_bar")) el("res_bar").style.width = `${percent}%`;
+
+  // (Opcional) Mostrar variação dos itens já comprados (economia/estouro em quem tem valor final)
+  let varLabel = document.getElementById("res_variacao");
+  if (varLabel) {
+    varLabel.innerText = (variacaoComprados >= 0 ? "Economia: " : "Estouro: ") + formatBRL(Math.abs(variacaoComprados));
+    varLabel.style.color = variacaoComprados >= 0 ? "#2e7d32" : "#c62828";
+  }
+}
+
