@@ -13,9 +13,9 @@ function fromApiToLocal(item) {
   return {
     _id: item.id,
     nomeproduto: item.nome ?? '',
-    orcamento: item.preco ?? 0,     // mantendo seus dois campos
-    valorfinal: item.preco ?? 0,    // ambos espelham 'preco' por enquanto
-    quantidade: item.quantidade ?? '',
+    orcamento: item.orcamento ?? 0,
+    valorfinal: item.valorfinal ?? 0,
+    quantidade: item.quantidade ?? 1,
     linkreferencia: item.link_referencia ?? '',
     linkcompra: item.link_compra ?? '',
     comprado: !!item.comprado,
@@ -23,12 +23,14 @@ function fromApiToLocal(item) {
     editar: false
   };
 }
+
 function fromLocalToApi(p, categoria) {
   return {
     nome: p.nomeproduto,
-    preco: Number(p.valorfinal || p.orcamento || 0),
     categoria,
-    quantidade: p.quantidade || 1,
+    orcamento: Number(p.orcamento || 0),
+    valorfinal: Number(p.valorfinal || 0),
+    quantidade: Number(p.quantidade || 1),
     link_referencia: p.linkreferencia || '',
     link_compra: p.linkcompra || '',
     comprado: !!p.comprado,
@@ -52,7 +54,7 @@ async function apiCriar(payload) {
   return r.json(); // { id }
 }
 async function apiRemover(id) {
-  const r = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+  const r = await fetch(`${API_URL}${id}`, { method: 'DELETE' })
   if (!r.ok) throw new Error('Falha ao remover produto');
 }
 
@@ -184,6 +186,39 @@ function editarProduto(index) {
     renderizarProdutos();
   } catch { /* se API off, segue local */ }
 })();
+
+async function apiPatch(id, body) {
+  await fetch(`${API_URL}${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+
+function marcarComprado(index) {
+  const p = produtos[ambienteAtual][index];
+  if (!p) return;
+  p.comprado = !p.comprado;
+  salvarProdutos();
+  renderizarProdutos();
+
+  if (p._id) {
+    apiPatch(p._id, { comprado: p.comprado }).catch(() => {});
+  }
+}
+
+function marcarPrioridade(index) {
+  const p = produtos[ambienteAtual][index];
+  if (!p) return;
+  p.prioridade = !p.prioridade;
+  salvarProdutos();
+  renderizarProdutos();
+
+  if (p._id) {
+    apiPatch(p._id, { prioridade: p.prioridade }).catch(() => {});
+  }
+}
+
 
 // expõe globais
 window.renderizarProdutos = renderizarProdutos;
