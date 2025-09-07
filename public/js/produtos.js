@@ -1,6 +1,6 @@
 // js/produtos.js — híbrido: localStorage + API (sem export, funções globais)
 
-const API_URL = 'http://127.0.0.1:5000/api/produtos/';
+const API_URL = 'http://192.168.192.1:4000/api/produtos/';
 const AMBIENTES = ['cozinha', 'quarto', 'sala', 'banheiro'];
 
 let produtos = carregarLocal('produtos') || {};
