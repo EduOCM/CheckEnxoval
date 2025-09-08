@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu Enxoval</title>
-  <link rel="stylesheet" href="style/style.css">
+  <link rel="stylesheet" href="style/variables.css">
+  <link rel="stylesheet" href="style/base.css">
+  <link rel="stylesheet" href="style/layout.css">
+  <link rel="stylesheet" href="style/components.css">
+  <link rel="stylesheet" href="style/utilities.css">
+  <link rel="stylesheet" href="style/responsive.css">
 </head>
 <body>
   <header>
@@ -54,7 +59,16 @@
               <div class="valor" id="res_itens">0 / 0 comprados</div>
             </div>
           </div>
-
+            <!-- Controles: busca e filtros -->
+            <div class="toolbar">
+              <input id="busca" type="text" placeholder="🔎 Buscar produto" oninput="setQuery(this.value)">
+              <div class="filtros">
+                <button class="flt active" onclick="setFiltro('todos', this)">Todos</button>
+                <button class="flt" onclick="setFiltro('comprados', this)">Comprados</button>
+                <button class="flt" onclick="setFiltro('pendentes', this)">Pendentes</button>
+                <button class="flt" onclick="setFiltro('prioridade', this)">Prioritários</button>
+              </div>
+            </div>
           <div class="progress-wrap">
             <div class="progress-head">
               <span>Progresso de compra</span>
