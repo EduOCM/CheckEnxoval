@@ -1,0 +1,5 @@
+.shadow{box-shadow:var(--shadow)}
+.rounded{border-radius:var(--radius)}
+.text-success{color:var(--ok)}
+.text-danger{color:var(--warn)}
+.hidden{display:none !important}

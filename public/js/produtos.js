@@ -11,6 +11,37 @@ let produtos = carregarLocal('produtos') || {};
 AMBIENTES.forEach(a => { if (!produtos[a]) produtos[a] = []; });
 function salvarProdutos() { salvarLocal('produtos', produtos); }
 
+let filtroAtual = 'todos'; // 'todos' | 'comprados' | 'pendentes' | 'prioridade'
+let queryAtual = '';
+
+function setFiltro(novo, btn) {
+  filtroAtual = novo;
+  // alterna destaque visual dos botões
+  document.querySelectorAll('.toolbar .filtros .flt').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderizarProdutos();
+}
+function setQuery(q) {
+  queryAtual = (q || '').trim().toLowerCase();
+  renderizarProdutos();
+}
+window.setFiltro = setFiltro;
+window.setQuery = setQuery;
+
+function passaFiltro(p) {
+  if (filtroAtual === 'comprados' && !p.comprado) return false;
+  if (filtroAtual === 'pendentes' && p.comprado) return false;
+  if (filtroAtual === 'prioridade' && !p.prioridade) return false;
+  if (queryAtual) {
+    const texto = [
+      p.nomeproduto, p.linkreferencia, p.linkcompra
+    ].filter(Boolean).join(' ').toLowerCase();
+    if (!texto.includes(queryAtual)) return false;
+  }
+  return true;
+}
+
+
 // ================== Utils ==================
 function parseNumero(raw) {
   if (raw === undefined || raw === null) return 0;
@@ -170,31 +201,69 @@ function renderizarProdutos() {
   const lista = document.getElementById('lista');
   if (!lista) return;
 
-  lista.innerHTML = '';
-  produtos[ambienteAtual].forEach((p, index) => {
+    lista.innerHTML = '';
+
+  const visiveis = (produtos[ambienteAtual] || []).filter(passaFiltro);
+
+  visiveis.forEach((p) => {
     const orc = parseNumero(p.orcamento);
     const val = parseNumero(p.valorfinal);
     const qtd = parseNumero(p.quantidade) || 1;
 
+    // índice real no array original (para ações funcionarem mesmo filtrado)
+    const indexReal = produtos[ambienteAtual].indexOf(p);
+
+    // ids únicos para inputs quando estiver editando
+    const idp = `i${ambienteAtual}-${indexReal}`;
+
+    // bloco de visualização (não editando)
+    const viewBlock = `
+      <strong>${p.nomeproduto || '(sem nome)'}</strong>
+      ${p.prioridade ? '<span class="badge prio">★ Prioridade</span>' : ''}
+      <div>Orçamento: ${formatBRL(orc)} | Final: ${formatBRL(val)} | Qtd: ${qtd}x</div>
+      <div class="links">
+        ${p.linkreferencia ? `<a href="${p.linkreferencia}" target="_blank">link referência</a>` : ''}
+        ${p.linkcompra ? `<a href="${p.linkcompra}" target="_blank">link compra</a>` : ''}
+      </div>
+    `;
+
+    // bloco de edição inline
+    const editBlock = `
+      <div class="edit-row">
+        <input id="${idp}-nome" type="text" placeholder="Nome" value="${p.nomeproduto ?? ''}">
+        <input id="${idp}-orc"  type="text" inputmode="decimal" placeholder="Orçamento" value="${p.orcamento ?? ''}">
+        <input id="${idp}-fin"  type="text" inputmode="decimal" placeholder="Valor final" value="${p.valorfinal ?? ''}">
+        <input id="${idp}-qtd"  type="number" min="1" placeholder="Qtd" value="${qtd}">
+        <input id="${idp}-ref"  type="text" placeholder="Link referência" value="${p.linkreferencia ?? ''}">
+        <input id="${idp}-buy"  type="text" placeholder="Link compra" value="${p.linkcompra ?? ''}">
+      </div>
+    `;
+
+    const actionsView = `
+      <div class="acoes">
+        <button onclick="marcarComprado(${indexReal})">${p.comprado ? '✅ Comprado' : '⏳ Pendente'}</button>
+        <button onclick="marcarPrioridade(${indexReal})">${p.prioridade ? '📈 Máxima' : '📉 Mínima'}</button>
+        <button onclick="editarProduto(${indexReal})">✏️ Editar</button>
+        <button onclick="excluirProduto(${indexReal})">❌ Excluir</button>
+      </div>
+    `;
+
+    const actionsEdit = `
+      <div class="edit-actions acoes">
+        <button onclick="salvarEdicao(${indexReal}, '${idp}')">💾 Salvar</button>
+        <button onclick="cancelarEdicao(${indexReal})">↩️ Cancelar</button>
+      </div>
+    `;
+
     lista.innerHTML += `
-      <div class="item">
-        <strong>${p.nomeproduto || '(sem nome)'}</strong>
-        <div>Orçamento: ${formatBRL(orc)} | Final: ${formatBRL(val)} | Qtd: ${qtd}x</div>
-        <div class="links">
-          ${p.linkreferencia ? `<a href="${p.linkreferencia}" target="_blank">link referência</a>` : ''}
-          ${p.linkcompra ? `<a href="${p.linkcompra}" target="_blank">link compra</a>` : ''}
-        </div>
-        <div class="acoes">
-          <button onclick="marcarComprado(${index})">${p.comprado ? '✅ Comprado' : '⏳ Pendente'}</button>
-          <button onclick="marcarPrioridade(${index})">${p.prioridade ? '📈 Máxima' : '📉 Mínima'}</button>
-          <button onclick="editarProduto(${index})">✏️ Editar</button>
-          <button onclick="excluirProduto(${index})">❌ Excluir</button>
-        </div>
+      <div class="item ${p.prioridade ? 'prioridade' : ''} ${p.editar ? 'editing' : ''}">
+        ${p.editar ? editBlock : viewBlock}
+        ${p.editar ? actionsEdit : actionsView}
       </div>
     `;
   });
 
-  renderizarResumo(); // atualiza totais e progresso
+  renderizarResumo(); // mantém o resumo do ambiente (não-filtrado) atualizado
 }
 
 function adicionarProduto(produto) {
@@ -271,19 +340,56 @@ function excluirProduto(index) {
 function editarProduto(index) {
   const p = produtos[ambienteAtual][index];
   if (!p) return;
-
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? '' };
-  set('nomeproduto', p.nomeproduto);
-  set('orcamento', p.orcamento);
-  set('valorfinal', p.valorfinal);
-  set('quantidade', p.quantidade);
-  set('linkreferencia', p.linkreferencia);
-  set('linkcompra', p.linkcompra);
-
-  produtos[ambienteAtual].splice(index, 1);
+  p.editar = true;
   salvarProdutos();
   renderizarProdutos();
 }
+
+function cancelarEdicao(index) {
+  const p = produtos[ambienteAtual][index];
+  if (!p) return;
+  p.editar = false;
+  salvarProdutos();
+  renderizarProdutos();
+}
+
+function salvarEdicao(index, idp) {
+  const p = produtos[ambienteAtual][index];
+  if (!p) return;
+
+  // lê valores dos inputs inline
+  const get = (s) => document.getElementById(`${idp}-${s}`)?.value ?? '';
+
+  const novo = {
+    nomeproduto: get('nome'),
+    orcamento: get('orc'),
+    valorfinal: get('fin'),
+    quantidade: get('qtd'),
+    linkreferencia: get('ref'),
+    linkcompra: get('buy')
+  };
+
+  // Atualiza local
+  Object.assign(p, novo);
+  p.editar = false;
+  salvarProdutos();
+  renderizarProdutos();
+
+  if (p._id) {
+    apiPatch(p._id, {
+      nome: novo.nomeproduto,
+      orcamento: parseNumero(novo.orcamento),
+      valorfinal: parseNumero(novo.valorfinal),
+      quantidade: parseNumero(novo.quantidade) || 1,
+      link_referencia: novo.linkreferencia || '',
+      link_compra: novo.linkcompra || ''
+    }).catch(() => {});
+  }
+}
+
+// expõe globais (adicione estas duas)
+window.salvarEdicao   = salvarEdicao;
+window.cancelarEdicao = cancelarEdicao;
 
 // ================== Sync inicial com a API ==================
 (async function sincronizarComApi() {
@@ -309,3 +415,7 @@ window.marcarComprado    = marcarComprado;
 window.marcarPrioridade  = marcarPrioridade;
 window.excluirProduto    = excluirProduto;
 window.editarProduto     = editarProduto;
+window.salvarEdicao      = salvarEdicao;
+window.cancelarEdicao    = cancelarEdicao;
+window.setFiltro         = setFiltro;
+window.setQuery          = setQuery;
