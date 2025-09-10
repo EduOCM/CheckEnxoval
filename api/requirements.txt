@@ -1,4 +1,0 @@
-# Nome do arquivo: api/requirements.txt
-Flask==3.0.3
-Flask-Cors==4.0.1
-Flask-SQLAlchemy==3.1.1
