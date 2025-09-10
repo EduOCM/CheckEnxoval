@@ -1,0 +1,6 @@
+{
+  "watch": ["src"],
+  "ignore": ["*.db", "data.db", ".git", "node_modules", "src/**/.DS_Store"],
+  "ext": "js,json,env,sql",
+  "exec": "node src/app.js"
+}
