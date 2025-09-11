@@ -1,110 +1,124 @@
 # 🛒 PortalEnxoval
 
 Projeto pessoal para acompanhar e organizar o enxoval.  
-Backend em **Flask + SQLite**, frontend em **HTML/JS/CSS** estático.
+Backend em **Node.js + Express + SQLite**, frontend em **HTML/JS/CSS** estático.
 
 ---
 
 ## 🔧 Estrutura
-- **Backend (API Flask)**  
-  Pasta: `api/`  
-  Banco: `api/instance/produtos.db` (gerado automaticamente, ignorado pelo git)  
+
+- **Backend (API Node)**  
+  Pasta: `server/`  
+  Banco: `server/data.db` (gerado automaticamente, ignorado pelo git)  
 
   Endpoints principais:
-  - `GET /api/health`
-  - `GET /api/produtos/`
-  - `POST /api/produtos/`
-  - `GET /api/produtos/{id}`
-  - `PATCH /api/produtos/{id}`
-  - `DELETE /api/produtos/{id}`
+  - `GET /health`
+  - `GET /api/produtos`
+  - `POST /api/produtos`
+  - `GET /api/produtos/:id`
+  - `PUT /api/produtos/:id`
+  - `DELETE /api/produtos/:id`
 
 - **Frontend (estático)**  
   Pasta: `public/`  
-  Arquivo principal: `public/index.html`  
+  Arquivo principal: `public/index.html`
 
 ---
 
 ## 🚀 Como rodar localmente
 
-Clonar o repositório e instalar dependências:
+Clone o repositório e instale as dependências do backend:
 
 ```bash
 git clone https://github.com/eduocm/checkenxoval
-cd checkenxoval
+cd checkenxoval/server
 
-# criar ambiente virtual
-python -m venv .venv
-source .venv/bin/activate
+# copiar variáveis de ambiente
+cp .env.example .env
 
 # instalar dependências
-pip install -r api/requirements.txt
+npm install
 ```
 
-### Rodar API (porta 5000 por padrão)
+### Rodar API (porta 3001 por padrão)
+
 ```bash
-python -m api.app
+npm run dev   # modo desenvolvimento (com nodemon)
+npm start     # modo produção
 ```
 
-### Rodar Frontend (porta 4001 por exemplo)
+### Rodar Frontend (porta 4001)
+
+Você tem **duas opções** para servir os arquivos estáticos da pasta `public/`:
+
+**Opção A — Usando Python (rápido e simples, precisa de Python instalado):**
 ```bash
-cd public
+cd ../public
 python -m http.server 4001
 ```
 
+**Opção B — Usando Node (sem Python, precisa instalar `serve`):**
+```bash
+npm install -g serve
+cd ../public
+serve -p 4001
+```
+
 Acesse no navegador:
-- API: [http://127.0.0.1:5000/api/health](http://127.0.0.1:5000/api/health)  
-- Frontend: [http://127.0.0.1:4001](http://127.0.0.1:4001)  
+- API: [http://127.0.0.1:3001/health](http://127.0.0.1:3001/health)  
+- Frontend: [http://127.0.0.1:4001](http://127.0.0.1:4001)
 
 ---
 
-## 🌐 Como rodar no servidor (meu fluxo pessoal com **tmux**)
+## 🌐 Como rodar no servidor (fluxo com **tmux**)
 
 1. **Acessar servidor**
    ```bash
-   ssh nameusaer@IP_server
-   cd Public/CheckEnxoval
+   ssh usuario@IP_server
+   cd ~/Public/CheckEnxoval
    ```
 
-2. **Verificar se tmux está rodando**
-   ```bash
-   tmux ls
-   ```
-   Exemplo:
-   ```
-   0: 1 windows (created ...)
-   ```
-
-3. **Entrar na sessão**
-   ```bash
-   tmux attach -t 0
-   ```
-
-4. **Parar processos atuais (Ctrl+C)**
-
-5. **Atualizar código**
+2. **Atualizar código**
    ```bash
    git pull
    ```
 
-6. **Rodar API**
+3. **Criar/entrar em uma sessão tmux**
    ```bash
-   python -m venv .venv && source .venv/bin/activate && pip install -r api/requirements.txt
-   python -m api.app
+   tmux new -s portal
    ```
 
-7. **Abrir nova janela no tmux (Ctrl+B, depois %)**  
-   Nessa nova janela:
+4. **Rodar API (janela 1 do tmux)**
    ```bash
-   cd Public/CheckEnxoval/public
-   python -m http.server 4001
+   cd server
+   npm install
+   npm start
    ```
 
-8. **Desconectar do tmux sem matar processos**
-   - `Ctrl+B` depois `D`
+5. **Abrir nova janela no tmux (Ctrl+b depois c) e rodar o frontend (janela 2 do tmux)**
+
+   - Se usar Python:
+     ```bash
+     cd ../public
+     python -m http.server 4001
+     ```
+   - Se usar Node:
+     ```bash
+     cd ../public
+     npx serve -p 4001
+     ```
+
+6. **Destacar do tmux sem encerrar**
+   - `Ctrl+b` depois `d`
+
+7. **Voltar depois**
+   ```bash
+   tmux attach -t portal
+   ```
 
 ---
 
 ## 🗄️ Banco de dados
-- Local: `api/instance/produtos.db`
-- Criado automaticamente na primeira execução.
-- Ignorado no Git (`.gitignore`).
+- Local: `server/data.db`
+- Criado automaticamente na primeira execução
+- Ignorado no Git (`.gitignore`)
