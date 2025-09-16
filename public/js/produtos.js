@@ -1,7 +1,7 @@
 // public/js/produtos.js — híbrido: localStorage + API (funções globais)
 
 const API_ORIGIN = `${location.protocol}//${location.hostname}:4000`;
-const API_URL    = `${API_ORIGIN}/api/produtos`;   // sem barra no final
+const API_URL    = `${API_ORIGIN}/api/produtos/`;   // sem barra no final
 
 // --- Ambientes fixos (pode evoluir p/ dinâmico depois) ---
 const AMBIENTES = ['cozinha', 'quarto', 'sala', 'banheiro'];
@@ -77,32 +77,31 @@ function formatBRL(n) {
 }
 
 // ================== Mapeamentos API <-> Local ==================
+// converte centavos da API → reais do front
 function fromApiToLocal(item) {
   return {
     _id: item.id,
     nomeproduto: item.nome ?? '',
-    orcamento: item.orcamento ?? 0,
-    valorfinal: item.valorfinal ?? 0,
-    quantidade: item.quantidade ?? 1,
-    linkreferencia: item.link_referencia ?? '',
-    linkcompra: item.link_compra ?? '',
-    comprado: !!item.comprado,
-    prioridade: !!item.prioridade,
-    editar: false
+    orcamento: (item.preco_centavos / 100).toFixed(2), // mostra em reais
+    valorfinal: '', // pode ficar vazio, só usamos orcamento
+    quantidade: 1,
+    linkreferencia: '', 
+    linkcompra: '',
+    comprado: false,
+    prioridade: false,
+    editar: false,
+    categoria: item.categoria ?? ''
   };
 }
 
+// converte front → centavos da API
 function fromLocalToApi(p, categoria) {
   return {
     nome: p.nomeproduto,
     categoria,
-    orcamento: parseNumero(p.orcamento),
-    valorfinal: parseNumero(p.valorfinal),
-    quantidade: parseNumero(p.quantidade) || 1,
-    link_referencia: p.linkreferencia || '',
-    link_compra: p.linkcompra || '',
-    comprado: !!p.comprado,
-    prioridade: !!p.prioridade
+    preco_centavos: Math.round(parseNumero(p.orcamento) * 100),
+    descricao: p.linkreferencia || p.linkcompra ? 
+      `ref=${p.linkreferencia} | compra=${p.linkcompra}` : null
   };
 }
 

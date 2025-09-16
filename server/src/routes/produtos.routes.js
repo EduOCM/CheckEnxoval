@@ -1,9 +1,10 @@
 ﻿import { Router } from 'express';
-import { index, show, store, update, destroy } from '../controllers/produtos.controller.js';
+import * as ctrl from '../controllers/produtos.controller.js';
 const router = Router();
-router.get('/', index);
-router.get('/:id', show);
-router.post('/', store);
-router.put('/:id', update);
-router.delete('/:id', destroy);
+router.get('/', ctrl.list);
+router.post('/', ctrl.create);
+router.get('/:id', ctrl.get);
+router.patch('/:id', ctrl.patch);
+router.delete('/:id', ctrl.del);
+
 export default router;

@@ -1,19 +1,24 @@
-# Python / venv / cache
+# Node
+node_modules/
+dist/
+build/
+npm-debug.log
+package-lock.json
+
+# Banco local
+*.db
+server/data.db
+
+# Python (legado, caso ainda exista)
 .venv/
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-
-# Banco local / instâncias
-*.db
-instance/
 api/instance/
 
-# Front (se usar futuramente)
-node_modules/
-dist/
-build/
+# Front (builds futuros)
+public/style/style.css
 
 # SO / editor
 .DS_Store

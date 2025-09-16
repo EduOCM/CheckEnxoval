@@ -1,46 +1,79 @@
 import db from '../db/connection.js';
 
-export function listarProdutos() {
-  const stmt = db.prepare('SELECT * FROM produtos ORDER BY id DESC');
-  return stmt.all();
-}
+const selectAll = db.prepare(`
+  SELECT
+    id, nome, categoria, orcamento, valorfinal, quantidade,
+    link_referencia, link_compra, comprado, prioridade
+  FROM produtos
+  ORDER BY id DESC
+`);
 
-export function obterProduto(id) {
-  const stmt = db.prepare('SELECT * FROM produtos WHERE id = ?');
-  return stmt.get(id);
-}
+const selectById = db.prepare(`
+  SELECT
+    id, nome, categoria, orcamento, valorfinal, quantidade,
+    link_referencia, link_compra, comprado, prioridade
+  FROM produtos
+  WHERE id = ?
+`);
 
-export function criarProduto({ nome, preco_centavos, descricao, categoria }) {
-  const stmt = db.prepare(
-    `INSERT INTO produtos (nome, preco_centavos, descricao, categoria, updated_at)
-     VALUES (?, ?, ?, ?, datetime('now'))`
-  );
-  const info = stmt.run(nome, preco_centavos, descricao ?? null, categoria ?? null);
-  return obterProduto(info.lastInsertRowid);
-}
+const insertOne = db.prepare(`
+  INSERT INTO produtos
+    (nome, categoria, orcamento, valorfinal, quantidade,
+     link_referencia, link_compra, comprado, prioridade)
+  VALUES
+    (@nome, @categoria, @orcamento, @valorfinal, @quantidade,
+     @link_referencia, @link_compra, @comprado, @prioridade)
+`);
 
-export function atualizarProduto(id, patch) {
-  const atual = obterProduto(id);
-  if (!atual) return null;
+const deleteById = db.prepare(`DELETE FROM produtos WHERE id = ?`);
 
-  const campos = {
-    nome: patch.nome ?? atual.nome,
-    preco_centavos: patch.preco_centavos ?? atual.preco_centavos,
-    descricao: patch.descricao ?? atual.descricao,
-    categoria: patch.categoria ?? atual.categoria
+function buildPatch(fields) {
+  const cols = [];
+  const params = {};
+  const allowed = [
+    'nome','categoria','orcamento','valorfinal','quantidade',
+    'link_referencia','link_compra','comprado','prioridade'
+  ];
+  for (const k of allowed) {
+    if (k in fields) { cols.push(`${k} = @${k}`); params[k] = fields[k]; }
+  }
+  if (!cols.length) return null;
+  return {
+    sql: `UPDATE produtos SET ${cols.join(', ')} WHERE id = @id`,
+    params
   };
-
-  const stmt = db.prepare(
-    `UPDATE produtos
-     SET nome = ?, preco_centavos = ?, descricao = ?, categoria = ?, updated_at = datetime('now')
-     WHERE id = ?`
-  );
-  stmt.run(campos.nome, campos.preco_centavos, campos.descricao, campos.categoria, id);
-  return obterProduto(id);
 }
 
-export function deletarProduto(id) {
-  const stmt = db.prepare('DELETE FROM produtos WHERE id = ?');
-  const info = stmt.run(id);
-  return info.changes > 0;
-}
+export default {
+  list() {
+    return selectAll.all();
+  },
+  get(id) {
+    return selectById.get(id);
+  },
+  create(payload) {
+    const defaults = {
+      categoria: null,
+      orcamento: null,
+      valorfinal: null,
+      quantidade: 1,
+      link_referencia: null,
+      link_compra: null,
+      comprado: 0,
+      prioridade: 0
+    };
+    const data = { ...defaults, ...payload };
+    const info = insertOne.run(data);
+    return this.get(info.lastInsertRowid);
+  },
+  patch(id, fields) {
+    const q = buildPatch(fields);
+    if (!q) return this.get(id);
+    const info = db.prepare(q.sql).run({ id, ...q.params });
+    if (info.changes === 0) return null;
+    return this.get(id);
+  },
+  remove(id) {
+    return deleteById.run(id).changes > 0;
+  }
+};

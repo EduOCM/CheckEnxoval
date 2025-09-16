@@ -1,9 +1,15 @@
+PRAGMA journal_mode = WAL;
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE IF NOT EXISTS produtos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT NOT NULL,
-  preco_centavos INTEGER NOT NULL DEFAULT 0,
-  descricao TEXT,
-  categoria TEXT,
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome           VARCHAR(120) NOT NULL,
+  categoria      VARCHAR(80),
+  orcamento      FLOAT,
+  valorfinal     FLOAT,
+  quantidade     INTEGER,
+  link_referencia VARCHAR(255),
+  link_compra     VARCHAR(255),
+  comprado       BOOLEAN NOT NULL DEFAULT 0,
+  prioridade     BOOLEAN NOT NULL DEFAULT 0
 );
