@@ -1,7 +1,7 @@
 // public/js/produtos.js — híbrido: localStorage + API (funções globais)
 
 const API_ORIGIN = `${location.protocol}//${location.hostname}:4000`;
-const API_URL    = `${API_ORIGIN}/api/produtos/`;   // sem barra no final
+const API_URL    = `${API_ORIGIN}/api/produtos`;   // sem barra no final
 
 // --- Ambientes fixos (pode evoluir p/ dinâmico depois) ---
 const AMBIENTES = ['cozinha', 'quarto', 'sala', 'banheiro'];

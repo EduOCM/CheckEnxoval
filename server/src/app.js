@@ -5,6 +5,11 @@ import produtosRoutes from './routes/produtos.routes.js';
 import { notFound, errorHandler } from './middlewares/error.js';
 
 const app = express();
+const ORIGENS = [
+  'http://172.28.1.1:4001',
+  'http://localhost:4001',
+  'http://192.168.192.1:4001'
+];
 const PORT = process.env.PORT || 4000;
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? '*' }));
 app.use(express.json());
