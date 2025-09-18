@@ -141,43 +141,44 @@ async function apiPatch(id, body) {
 // ================== Resumo e Progresso ==================
 function calcularResumo(ambiente) {
   const lista = produtos[ambiente] || [];
-  let totalOrc = 0;           // soma de todos os orçamentos
+  let totalOrcamento = 0;           // soma de todos os orçamentos
   let totalFinal = 0;         // soma de valor final SOMENTE dos itens com final > 0
   let variacaoComprados = 0;  // soma de (orcamento - valorfinal) para quem tem final > 0
   let itens = 0;
   let comprados = 0;
 
-  for (const p of lista) {
-    const orc = parseNumero(p.orcamento);
-    const fin = parseNumero(p.valorfinal);
-
-    totalOrc += orc;
-    if (fin > 0) {
-      totalFinal += fin;
-      variacaoComprados += (orc - fin);
+  for (const produto of lista) {
+    const orcamento = parseNumero(produto.orcamento);
+    const valorFinal = parseNumero(produto.valorfinal);
+    const quantidade = parseNumero(produto.quantidade);
+    
+    totalOrcamento += orcamento;
+    if (valorFinal > 0) {
+      totalFinal += valorFinal * quantidade;
+      variacaoComprados += (orcamento - (valorFinal * quantidade));
     }
 
     itens += 1;
-    if (p.comprado) comprados += 1;
+    if (produto.comprado) comprados += 1;
   }
 
-  const saldo = totalOrc - totalFinal;
+  const saldo = totalOrcamento - totalFinal;
   const percent = itens > 0 ? Math.round((comprados / itens) * 100) : 0;
 
-  return { totalOrc, totalFinal, saldo, itens, comprados, percent, variacaoComprados };
+  return { totalOrcamento, totalFinal, saldo, itens, comprados, percent, variacaoComprados };
 }
 
 function renderizarResumo() {
   const wrap = document.getElementById("resumoAmbiente");
   if (!wrap || !ambienteAtual) return;
 
-  const { totalOrc, totalFinal, saldo, itens, comprados, percent, variacaoComprados } =
+  const { totalOrcamento, totalFinal, saldo, itens, comprados, percent, variacaoComprados } =
     calcularResumo(ambienteAtual);
-
+  console.log()
   wrap.style.display = (itens > 0) ? "block" : "none";
 
   const el = (id) => document.getElementById(id);
-  if (el("res_orcamento")) el("res_orcamento").innerText = formatBRL(totalOrc);
+  if (el("res_orcamento")) el("res_orcamento").innerText = formatBRL(totalOrcamento);
   if (el("res_final")) el("res_final").innerText = formatBRL(totalFinal);
   if (el("res_saldo")) {
     el("res_saldo").innerText = formatBRL(saldo);
