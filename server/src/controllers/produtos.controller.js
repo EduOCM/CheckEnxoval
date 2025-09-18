@@ -1,8 +1,21 @@
-﻿import model from '../models/produtos.model.js';
+﻿// server/src/controllers/produtos.controller.js
+import model from '../models/produtos.model.js';
 import { createProdutoSchema, patchProdutoSchema } from '../validators/produtos.schema.js';
 
-export async function list(req, res) {
-  res.json(model.list());
+export async function list(req, res, next) {
+  try {
+    const itens = model.list();
+    res.json(itens);
+  } catch (err) { next(err); }
+}
+
+export async function get(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+    const item = model.get(id);
+    if (!item) return res.status(404).json({ error: 'Não encontrado' });
+    res.json(item);
+  } catch (err) { next(err); }
 }
 
 export async function create(req, res, next) {
@@ -17,9 +30,9 @@ export async function patch(req, res, next) {
   try {
     const id = Number(req.params.id);
     const fields = patchProdutoSchema.parse(req.body);
-    const updated = model.patch(id, fields);
-    if (!updated) return res.status(404).json({ error: 'não encontrado' });
-    res.json(updated);
+    const atualizado = model.patch(id, fields);
+    if (!atualizado) return res.status(404).json({ error: 'Não encontrado' });
+    res.json(atualizado);
   } catch (err) { next(err); }
 }
 
@@ -27,6 +40,7 @@ export async function remove(req, res, next) {
   try {
     const id = Number(req.params.id);
     const ok = model.remove(id);
-    res.status(ok ? 204 : 404).end();
+    if (!ok) return res.status(404).json({ error: 'Não encontrado' });
+    res.status(204).end();
   } catch (err) { next(err); }
 }
