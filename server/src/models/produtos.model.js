@@ -1,19 +1,16 @@
 import db from '../db/connection.js';
 
 const selectAll = db.prepare(`
-  SELECT
-    id, nome, categoria, orcamento, valorfinal, quantidade,
-    link_referencia, link_compra, comprado, prioridade
+  SELECT id, nome, categoria, orcamento, valorfinal, quantidade,
+         link_referencia, link_compra, comprado, prioridade
   FROM produtos
   ORDER BY id DESC
 `);
 
 const selectById = db.prepare(`
-  SELECT
-    id, nome, categoria, orcamento, valorfinal, quantidade,
-    link_referencia, link_compra, comprado, prioridade
-  FROM produtos
-  WHERE id = ?
+  SELECT id, nome, categoria, orcamento, valorfinal, quantidade,
+         link_referencia, link_compra, comprado, prioridade
+  FROM produtos WHERE id = ?
 `);
 
 const insertOne = db.prepare(`
@@ -28,31 +25,22 @@ const insertOne = db.prepare(`
 const deleteById = db.prepare(`DELETE FROM produtos WHERE id = ?`);
 
 function buildPatch(fields) {
-  const cols = [];
-  const params = {};
   const allowed = [
     'nome','categoria','orcamento','valorfinal','quantidade',
     'link_referencia','link_compra','comprado','prioridade'
   ];
-  for (const k of allowed) {
-    if (k in fields) { cols.push(`${k} = @${k}`); params[k] = fields[k]; }
-  }
+  const cols = [];
+  const params = {};
+  for (const k of allowed) if (k in fields) { cols.push(`${k} = @${k}`); params[k] = fields[k]; }
   if (!cols.length) return null;
-  return {
-    sql: `UPDATE produtos SET ${cols.join(', ')} WHERE id = @id`,
-    params
-  };
+  return { sql: `UPDATE produtos SET ${cols.join(', ')} WHERE id = @id`, params };
 }
 
 export default {
-  list() {
-    return selectAll.all();
-  },
-  get(id) {
-    return selectById.get(id);
-  },
+  list() { return selectAll.all(); },
+  get(id) { return selectById.get(id); },
   create(payload) {
-    const defaults = {
+    const data = {
       categoria: null,
       orcamento: null,
       valorfinal: null,
@@ -60,9 +48,9 @@ export default {
       link_referencia: null,
       link_compra: null,
       comprado: 0,
-      prioridade: 0
+      prioridade: 0,
+      ...payload
     };
-    const data = { ...defaults, ...payload };
     const info = insertOne.run(data);
     return this.get(info.lastInsertRowid);
   },
