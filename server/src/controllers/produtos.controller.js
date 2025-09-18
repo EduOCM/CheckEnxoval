@@ -1,5 +1,5 @@
 ﻿import model from '../models/produtos.model.js';
-import { createProdutoSchema, patchProdutoSchema } from '../schemas/produtos.schema.js';
+import { createProdutoSchema, patchProdutoSchema } from '../validators/produtos.schema.js';
 
 export async function list(req, res) {
   res.json(model.list());
