@@ -82,13 +82,13 @@ function fromApiToLocal(item) {
   return {
     _id: item.id,
     nomeproduto: item.nome ?? '',
-    orcamento: (item.preco_centavos / 100).toFixed(2), // mostra em reais
-    valorfinal: '', // pode ficar vazio, só usamos orcamento
-    quantidade: 1,
-    linkreferencia: '', 
-    linkcompra: '',
-    comprado: false,
-    prioridade: false,
+    orcamento: item.orcamento ?? '',   // em reais
+    valorfinal: item.valorfinal ?? '',
+    quantidade: item.quantidade ?? 1,
+    linkreferencia: item.link_referencia ?? '',
+    linkcompra: item.link_compra ?? '',
+    comprado: !!item.comprado,
+    prioridade: !!item.prioridade,
     editar: false,
     categoria: item.categoria ?? ''
   };
@@ -99,9 +99,13 @@ function fromLocalToApi(p, categoria) {
   return {
     nome: p.nomeproduto,
     categoria,
-    preco_centavos: Math.round(parseNumero(p.orcamento) * 100),
-    descricao: p.linkreferencia || p.linkcompra ? 
-      `ref=${p.linkreferencia} | compra=${p.linkcompra}` : null
+    orcamento: parseNumero(p.orcamento),
+    valorfinal: parseNumero(p.valorfinal),
+    quantidade: parseNumero(p.quantidade) || 1,
+    link_referencia: p.linkreferencia || '',
+    link_compra: p.linkcompra || '',
+    comprado: !!p.comprado,
+    prioridade: !!p.prioridade
   };
 }
 
