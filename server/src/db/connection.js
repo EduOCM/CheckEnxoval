@@ -1,27 +1,13 @@
+// server/src/db/connection.js
 import Database from 'better-sqlite3';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DB_PATH = process.env.DB_FILE || path.resolve(__dirname, '../data.db');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../data.db');
-const db = new Database(DB_PATH);
+// Liga logs de SQL (ajuda a debugar o 500) — pode desligar depois
+const db = new Database(DB_PATH, { verbose: console.log });
 
-// Cria/atualiza schema
-const schemaPath = path.join(__dirname, 'schema.sql');
-if (fs.existsSync(schemaPath)) {
-  const schema = fs.readFileSync(schemaPath, 'utf8');
-  db.exec(schema);
-}
-
-// Seed inicial (ignora erros se já inserido)
-const seedPath = path.join(__dirname, 'seed.sql');
-if (fs.existsSync(seedPath)) {
-  try {
-    const seed = fs.readFileSync(seedPath, 'utf8');
-    db.exec(seed);
-  } catch {}
-}
-
+console.log('[SQLite] usando arquivo:', DB_PATH);
 export default db;
