@@ -82,8 +82,8 @@ function fromApiToLocal(item) {
   return {
     _id: item.id,
     nomeproduto: item.nome ?? '',
-    orcamento: item.orcamento ?? '',   // em reais
-    valorfinal: item.valorfinal ?? '',
+    orcamento: item.orcamento ?? 0,
+    valorfinal: item.valorfinal ?? 0,
     quantidade: item.quantidade ?? 1,
     linkreferencia: item.link_referencia ?? '',
     linkcompra: item.link_compra ?? '',
