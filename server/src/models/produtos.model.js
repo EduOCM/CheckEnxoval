@@ -24,6 +24,14 @@ const insertOne = db.prepare(`
 
 const deleteById = db.prepare(`DELETE FROM produtos WHERE id = ?`);
 
+function stripUndefined(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj || {})) {
+    if (v !== undefined) out[k] = v;
+  }
+  return out;
+}
+
 function buildPatch(fields) {
   const allowed = [
     'nome','categoria','orcamento','valorfinal','quantidade',
