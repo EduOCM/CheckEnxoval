@@ -1,10 +1,12 @@
 ﻿import { Router } from 'express';
-import * as ctrl from '../controllers/produtos.controller.js';
+import { list, get, create, patch, remove } from '../controllers/produtos.controller.js';
+
 const router = Router();
-router.get('/', ctrl.list);
-router.post('/', ctrl.create);
-router.get('/:id', ctrl.get);
-router.patch('/:id', ctrl.patch);
-router.delete('/:id', ctrl.del);
+
+router.get('/', list);
+router.post('/', create);
+router.get('/:id', get);
+router.patch('/:id', patch);
+router.delete('/:id', remove);
 
 export default router;

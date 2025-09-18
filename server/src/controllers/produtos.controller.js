@@ -3,13 +3,12 @@ import model from '../models/produtos.model.js';
 
 export async function list(req, res, next) {
   try {
-    // better-sqlite3 é síncrono; não precisa de await
-    const rows = model.list();
+    const rows = model.list();          // <- era findAll()
     res.json(rows);
   } catch (err) { next(err); }
 }
 
-export async function getOne(req, res, next) {
+export async function get(req, res, next) {
   try {
     const id = Number(req.params.id);
     const row = model.get(id);
@@ -20,17 +19,17 @@ export async function getOne(req, res, next) {
 
 export async function create(req, res, next) {
   try {
-    const novo = model.create(req.body);
-    res.status(201).json(novo);
+    const created = model.create(req.body);
+    res.status(201).json(created);
   } catch (err) { next(err); }
 }
 
 export async function patch(req, res, next) {
   try {
     const id = Number(req.params.id);
-    const atualizado = model.patch(id, req.body);
-    if (!atualizado) return res.status(404).json({ error: 'Não encontrado' });
-    res.json(atualizado);
+    const updated = model.patch(id, req.body);
+    if (!updated) return res.status(404).json({ error: 'Não encontrado' });
+    res.json(updated);
   } catch (err) { next(err); }
 }
 
