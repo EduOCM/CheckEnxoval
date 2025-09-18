@@ -7,7 +7,13 @@ package-lock.json
 
 # Banco local
 *.db
+server/.env
+server/.env.*
 server/data.db
+server/*.db
+server/*.db-*
+server/*.db-shm
+server/*.db-wal
 
 # Python (legado, caso ainda exista)
 .venv/
