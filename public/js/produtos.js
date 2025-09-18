@@ -150,11 +150,12 @@ function calcularResumo(ambiente) {
   for (const p of lista) {
     const orc = parseNumero(p.orcamento);
     const fin = parseNumero(p.valorfinal);
+    const qtd = parseNumero(p.quantidade) || 1;
 
-    totalOrc += orc;
+    totalOrc += orc * qtd;
     if (fin > 0) {
-      totalFinal += fin;
-      variacaoComprados += (orc - fin);
+      totalFinal += fin * qtd;
+      variacaoComprados += (orc - fin) * qtd; // economia/estouro só quando há final
     }
 
     itens += 1;
@@ -197,6 +198,27 @@ function renderizarResumo() {
 }
 
 // ================== UI (lista) ==================
+
+let mostrarUnitario = (carregarLocal('prefs')?.mostrarUnitario) ?? false;
+
+function salvarPrefs() {
+  const prefs = carregarLocal('prefs') || {};
+  prefs.mostrarUnitario = mostrarUnitario;
+  salvarLocal('prefs', prefs);
+}
+
+function toggleModoValor(btn) {
+  mostrarUnitario = !mostrarUnitario;
+  salvarPrefs();
+  // atualiza rótulo do botão (se existir)
+  const el = btn || document.getElementById('btnModoValor');
+  if (el) el.textContent = mostrarUnitario ? 'Mostrar valor TOTAL' : 'Mostrar valor UNITÁRIO';
+  renderizarProdutos();
+}
+window.toggleModoValor = toggleModoValor;
+
+
+
 function renderizarProdutos() {
   if (!window.ambienteAtual) return;
   if (!produtos[ambienteAtual]) produtos[ambienteAtual] = [];
@@ -219,11 +241,16 @@ function renderizarProdutos() {
     // ids únicos para inputs quando estiver editando
     const idp = `i${ambienteAtual}-${indexReal}`;
 
+    const vOrcExib = mostrarUnitario ? orc : (orc * qtd);
+    const vFinExib = mostrarUnitario ? val : (val * qtd);
+
+    const rotuloModo = mostrarUnitario ? 'Unit.' : 'Total';
+
     // bloco de visualização (não editando)
     const viewBlock = `
       <strong>${p.nomeproduto || '(sem nome)'}</strong>
       ${p.prioridade ? '<span class="badge prio">★ Prioridade</span>' : ''}
-      <div>Orçamento: ${formatBRL(orc)} | Final: ${formatBRL(val)} | Qtd: ${qtd}x</div>
+      <div>${rotuloModo} Orçamento: ${formatBRL(vOrcExib)} | ${rotuloModo} Final: ${formatBRL(vFinExib)} | Qtd: ${qtd}x</div>
       <div class="links">
         ${p.linkreferencia ? `<a href="${p.linkreferencia}" target="_blank">link referência</a>` : ''}
         ${p.linkcompra ? `<a href="${p.linkcompra}" target="_blank">link compra</a>` : ''}
@@ -422,3 +449,8 @@ window.salvarEdicao      = salvarEdicao;
 window.cancelarEdicao    = cancelarEdicao;
 window.setFiltro         = setFiltro;
 window.setQuery          = setQuery;
+
+setTimeout(() => {
+  const b = document.getElementById('btnModoValor');
+  if (b) b.textContent = mostrarUnitario ? 'Mostrar valor TOTAL' : 'Mostrar valor UNITÁRIO';
+}, 0);
