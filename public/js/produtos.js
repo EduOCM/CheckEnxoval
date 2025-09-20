@@ -9,7 +9,19 @@ const AMBIENTES = ['cozinha', 'quarto', 'sala', 'banheiro'];
 // --- Estado local (cache em localStorage p/ UX rápida) ---
 let produtos = carregarLocal('produtos') || {};
 AMBIENTES.forEach(a => { if (!produtos[a]) produtos[a] = []; });
-function salvarProdutos() { salvarLocal('produtos', produtos); }
+function salvarProdutos() {
+  // normaliza todos os ambientes antes de salvar
+  const copia = {};
+  for (const amb of AMBIENTES) {
+    copia[amb] = (produtos[amb] || []).map(p => ({
+      ...p,
+      orcamento:  typeof p.orcamento  === 'number' ? p.orcamento  : parseNumero(p.orcamento),
+      valorfinal: typeof p.valorfinal === 'number' ? p.valorfinal : parseNumero(p.valorfinal),
+      quantidade: typeof p.quantidade === 'number' ? p.quantidade : (parseNumero(p.quantidade) || 1)
+    }));
+  }
+  salvarLocal('produtos', copia);
+}
 
 let filtroAtual = 'todos'; // 'todos' | 'comprados' | 'pendentes' | 'prioridade'
 let queryAtual = '';
@@ -359,12 +371,12 @@ function adicionarProduto(produto) {
 
   if (!produto) {
     produto = {
-      nomeproduto: document.getElementById('nomeproduto')?.value || '',
-      orcamento: document.getElementById('orcamento')?.value || '',
-      valorfinal: document.getElementById('valorfinal')?.value || '',
-      quantidade: document.getElementById('quantidade')?.value || '',
-      linkreferencia: document.getElementById('linkreferencia')?.value || '',
-      linkcompra: document.getElementById('linkcompra')?.value || '',
+      nomeproduto:      document.getElementById('nomeproduto')?.value || '',
+      orcamento:        parseNumero(document.getElementById('orcamento')?.value || 0),   // <–
+      valorfinal:       parseNumero(document.getElementById('valorfinal')?.value || 0), // <–
+      quantidade:       parseNumero(document.getElementById('quantidade')?.value || 1) || 1, // <–
+      linkreferencia:   document.getElementById('linkreferencia')?.value || '',
+      linkcompra:       document.getElementById('linkcompra')?.value || '',
       comprado: false,
       prioridade: false,
       editar: false
@@ -377,17 +389,13 @@ function adicionarProduto(produto) {
   renderizarProdutos();
 
   // 2) Cria no backend
-  apiCriar(fromLocalToApi(produto, ambienteAtual))
-    .then((obj) => {
-      const idx = produtos[ambienteAtual].length - 1;
-      if (idx >= 0) {
-        produtos[ambienteAtual][idx]._id = obj.id;
-        salvarProdutos();
-      }
-    })
-    .catch(() => { /* se falhar, segue local */ });
-
-  // limpar inputs
+  apiCriar(fromLocalToApi(produto, ambienteAtual)).then(obj => {
+    const idx = produtos[ambienteAtual].length - 1;
+    if (idx >= 0) {
+      produtos[ambienteAtual][idx]._id = obj.id;
+      salvarProdutos();
+    }
+  }).catch(() => {});
   ['nomeproduto','orcamento','valorfinal','quantidade','linkreferencia','linkcompra']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
@@ -445,19 +453,17 @@ function salvarEdicao(index, idp) {
   const p = produtos[ambienteAtual][index];
   if (!p) return;
 
-  // lê valores dos inputs inline
   const get = (s) => document.getElementById(`${idp}-${s}`)?.value ?? '';
 
   const novo = {
-    nomeproduto: get('nome'),
-    orcamento: get('orc'),
-    valorfinal: get('fin'),
-    quantidade: get('qtd'),
+    nomeproduto:    get('nome'),
+    orcamento:      parseNumero(get('orc')),   // <–
+    valorfinal:     parseNumero(get('fin')),   // <–
+    quantidade:     parseNumero(get('qtd')) || 1, // <–
     linkreferencia: get('ref'),
-    linkcompra: get('buy')
+    linkcompra:     get('buy')
   };
 
-  // Atualiza local
   Object.assign(p, novo);
   p.editar = false;
   salvarProdutos();
@@ -465,12 +471,12 @@ function salvarEdicao(index, idp) {
 
   if (p._id) {
     apiPatch(p._id, {
-      nome: novo.nomeproduto,
-      orcamento: parseNumero(novo.orcamento),
-      valorfinal: parseNumero(novo.valorfinal),
-      quantidade: parseNumero(novo.quantidade) || 1,
+      nome:            novo.nomeproduto,
+      orcamento:       novo.orcamento,
+      valorfinal:      novo.valorfinal,
+      quantidade:      novo.quantidade,
       link_referencia: novo.linkreferencia || '',
-      link_compra: novo.linkcompra || ''
+      link_compra:     novo.linkcompra || ''
     }).catch(() => {});
   }
 }
