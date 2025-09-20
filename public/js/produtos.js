@@ -82,15 +82,14 @@ function fromApiToLocal(item) {
   return {
     _id: item.id,
     nomeproduto: item.nome ?? '',
-    orcamento: item.orcamento ?? 0,
-    valorfinal: item.valorfinal ?? 0,
-    quantidade: item.quantidade ?? 1,
+    orcamento: Number(item.orcamento ?? 0),
+    valorfinal: Number(item.valorfinal ?? 0),
+    quantidade: Number(item.quantidade ?? 1),
     linkreferencia: item.link_referencia ?? '',
     linkcompra: item.link_compra ?? '',
     comprado: !!item.comprado,
     prioridade: !!item.prioridade,
-    editar: false,
-    categoria: item.categoria ?? ''
+    editar: false
   };
 }
 
