@@ -76,6 +76,55 @@ function formatBRL(n) {
   catch { return `R$ ${Number(n).toFixed(2).replace(".", ",")}`; }
 }
 
+
+// ======== Input mask BRL (estilo banco) ========
+function onlyDigits(s) {
+  return (s || '').toString().replace(/\D/g, '');
+}
+
+
+function formatCentsBR(digits) {
+  // garante pelo menos "000"
+  let d = onlyDigits(digits);
+  if (d.length === 0) d = '000';
+  if (d.length === 1) d = '00' + d;
+  if (d.length === 2) d = '0'  + d;
+  const inteiro  = d.slice(0, -2);
+  const centavos = d.slice(-2);
+  // milhar com pontos
+  const milhar = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${milhar},${centavos}`;
+}
+
+// aplica a máscara em inputs com .money
+function bindMoneyInputs(ctx = document) {
+  const inputs = ctx.querySelectorAll('input.money');
+  inputs.forEach(inp => {
+    // evita dupla inscrição do listener
+    if (inp.dataset.maskBound) return;
+    inp.dataset.maskBound = '1';
+
+    // normaliza valor inicial (se houver)
+    if (inp.value && !/[,]/.test(inp.value)) {
+      // se veio "25.94" ou "25" etc, normaliza
+      const n = parseNumero(inp.value);
+      inp.value = formatCentsBR(Math.round(n * 100));
+    }
+
+    inp.addEventListener('input', () => {
+      const digits = onlyDigits(inp.value);
+      inp.value = formatCentsBR(digits);
+    });
+
+    // opcional: ao focar, leva o cursor pro fim
+    inp.addEventListener('focus', () => {
+      const v = inp.value; inp.value = ''; inp.value = v;
+    });
+  });
+}
+
+
+
 // ================== Mapeamentos API <-> Local ==================
 // converte centavos da API → reais do front
 function fromApiToLocal(item) {
@@ -260,8 +309,8 @@ function renderizarProdutos() {
     const editBlock = `
       <div class="edit-row">
         <input id="${idp}-nome" type="text" placeholder="Nome" value="${p.nomeproduto ?? ''}">
-        <input id="${idp}-orc"  type="text" inputmode="decimal" placeholder="Orçamento" value="${p.orcamento ?? ''}">
-        <input id="${idp}-fin"  type="text" inputmode="decimal" placeholder="Valor final" value="${p.valorfinal ?? ''}">
+        <input id="${idp}-orc"  class="money" type="text" inputmode="numeric" placeholder="Orçamento" value="${p.orcamento ?? ''}">
+        <input id="${idp}-fin"  class="money" type="text" inputmode="numeric" placeholder="Valor final" value="${p.valorfinal ?? ''}">
         <input id="${idp}-qtd"  type="number" min="1" placeholder="Qtd" value="${qtd}">
         <input id="${idp}-ref"  type="text" placeholder="Link referência" value="${p.linkreferencia ?? ''}">
         <input id="${idp}-buy"  type="text" placeholder="Link compra" value="${p.linkcompra ?? ''}">
@@ -293,6 +342,7 @@ function renderizarProdutos() {
   });
 
   renderizarResumo(); // mantém o resumo do ambiente (não-filtrado) atualizado
+  bindMoneyInputs(lista);
 }
 
 function adicionarProduto(produto) {
@@ -453,3 +503,5 @@ setTimeout(() => {
   const b = document.getElementById('btnModoValor');
   if (b) b.textContent = mostrarUnitario ? 'Mostrar valor TOTAL' : 'Mostrar valor UNITÁRIO';
 }, 0);
+
+document.addEventListener('DOMContentLoaded', () => bindMoneyInputs(document));
