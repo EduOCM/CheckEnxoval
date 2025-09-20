@@ -9,6 +9,7 @@ const AMBIENTES = ['cozinha', 'quarto', 'sala', 'banheiro'];
 // --- Estado local (cache em localStorage p/ UX rápida) ---
 let produtos = carregarLocal('produtos') || {};
 AMBIENTES.forEach(a => { if (!produtos[a]) produtos[a] = []; });
+migrarCacheProdutos();
 function salvarProdutos() {
   // normaliza todos os ambientes antes de salvar
   const copia = {};
@@ -51,6 +52,43 @@ function passaFiltro(p) {
     if (!texto.includes(queryAtual)) return false;
   }
   return true;
+}
+
+
+// --- Normalização consistente para o estado/localStorage ---
+function normalizarProdutoLocal(p) {
+  return {
+    ...p,
+    orcamento: parseNumero(p.orcamento),   // "25,61" -> 25.61
+    valorfinal: parseNumero(p.valorfinal), // "2,52"  -> 2.52
+    quantidade: parseNumero(p.quantidade) || 1
+  };
+}
+
+
+// migração 1x: converte o que já está no localStorage para número
+function migrarCacheProdutos() {
+  const cache = carregarLocal('produtos');
+  if (!cache || typeof cache !== 'object') return;
+
+  let alterou = false;
+  for (const amb of Object.keys(cache)) {
+    const lista = cache[amb] || [];
+    for (let i = 0; i < lista.length; i++) {
+      const antes = lista[i];
+      const depois = normalizarProdutoLocal(antes);
+      // se mudou, marca para salvar
+      if (
+        antes.orcamento !== depois.orcamento ||
+        antes.valorfinal !== depois.valorfinal ||
+        antes.quantidade !== depois.quantidade
+      ) {
+        lista[i] = depois;
+        alterou = true;
+      }
+    }
+  }
+  if (alterou) salvarLocal('produtos', cache);
 }
 
 
@@ -371,31 +409,37 @@ function adicionarProduto(produto) {
 
   if (!produto) {
     produto = {
-      nomeproduto:      document.getElementById('nomeproduto')?.value || '',
-      orcamento:        parseNumero(document.getElementById('orcamento')?.value || 0),   // <–
-      valorfinal:       parseNumero(document.getElementById('valorfinal')?.value || 0), // <–
-      quantidade:       parseNumero(document.getElementById('quantidade')?.value || 1) || 1, // <–
-      linkreferencia:   document.getElementById('linkreferencia')?.value || '',
-      linkcompra:       document.getElementById('linkcompra')?.value || '',
+      nomeproduto: document.getElementById('nomeproduto')?.value || '',
+      orcamento:   document.getElementById('orcamento')?.value   || '',
+      valorfinal:  document.getElementById('valorfinal')?.value  || '',
+      quantidade:  document.getElementById('quantidade')?.value  || '',
+      linkreferencia: document.getElementById('linkreferencia')?.value || '',
+      linkcompra:     document.getElementById('linkcompra')?.value     || '',
       comprado: false,
       prioridade: false,
       editar: false
     };
   }
 
-  // 1) Atualiza local p/ UI responsiva
-  produtos[ambienteAtual].push(produto);
+  // 1) Normaliza para número no estado/local
+  const localNorm = normalizarProdutoLocal(produto);
+  produtos[ambienteAtual].push(localNorm);
   salvarProdutos();
   renderizarProdutos();
 
-  // 2) Cria no backend
-  apiCriar(fromLocalToApi(produto, ambienteAtual)).then(obj => {
-    const idx = produtos[ambienteAtual].length - 1;
-    if (idx >= 0) {
-      produtos[ambienteAtual][idx]._id = obj.id;
-      salvarProdutos();
-    }
-  }).catch(() => {});
+  // 2) Envia para a API (já com números corretos)
+  const payload = fromLocalToApi(localNorm, ambienteAtual);
+  apiCriar(payload)
+    .then((obj) => {
+      const idx = produtos[ambienteAtual].length - 1;
+      if (idx >= 0) {
+        produtos[ambienteAtual][idx]._id = obj.id;
+        salvarProdutos();
+      }
+    })
+    .catch(() => { /* se falhar, segue local */ });
+
+  // 3) Limpa inputs
   ['nomeproduto','orcamento','valorfinal','quantidade','linkreferencia','linkcompra']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
@@ -450,33 +494,19 @@ function cancelarEdicao(index) {
 }
 
 function salvarEdicao(index, idp) {
-  const p = produtos[ambienteAtual][index];
-  if (!p) return;
-
-  const get = (s) => document.getElementById(`${idp}-${s}`)?.value ?? '';
-
-  const novo = {
-    nomeproduto:    get('nome'),
-    orcamento:      parseNumero(get('orc')),   // <–
-    valorfinal:     parseNumero(get('fin')),   // <–
-    quantidade:     parseNumero(get('qtd')) || 1, // <–
-    linkreferencia: get('ref'),
-    linkcompra:     get('buy')
-  };
-
-  Object.assign(p, novo);
-  p.editar = false;
+  const novoNorm = normalizarProdutoLocal(novo);
+  Object.assign(p, novoNorm, { editar: false });
   salvarProdutos();
   renderizarProdutos();
 
   if (p._id) {
     apiPatch(p._id, {
-      nome:            novo.nomeproduto,
-      orcamento:       novo.orcamento,
-      valorfinal:      novo.valorfinal,
-      quantidade:      novo.quantidade,
-      link_referencia: novo.linkreferencia || '',
-      link_compra:     novo.linkcompra || ''
+      nome: novoNorm.nomeproduto,
+      orcamento: novoNorm.orcamento,
+      valorfinal: novoNorm.valorfinal,
+      quantidade: novoNorm.quantidade,
+      link_referencia: p.linkreferencia || '',
+      link_compra:     p.linkcompra     || ''
     }).catch(() => {});
   }
 }
