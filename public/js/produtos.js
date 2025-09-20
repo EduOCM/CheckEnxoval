@@ -84,15 +84,24 @@ function onlyDigits(s) {
 
 
 function formatCentsBR(digits) {
-  // garante pelo menos "000"
+  // pega só dígitos
   let d = onlyDigits(digits);
+
+  // garante ao menos 3 dígitos (00 + centavos)
   if (d.length === 0) d = '000';
   if (d.length === 1) d = '00' + d;
   if (d.length === 2) d = '0'  + d;
-  const inteiro  = d.slice(0, -2);
+
+  // separa parte inteira e centavos
+  let inteiro  = d.slice(0, -2);
   const centavos = d.slice(-2);
-  // milhar com pontos
+
+  // REMOVE zeros à esquerda da parte inteira
+  inteiro = inteiro.replace(/^0+/, '') || '0';
+
+  // aplica o separador de milhar só depois de limpar os zeros
   const milhar = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
   return `${milhar},${centavos}`;
 }
 
