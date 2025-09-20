@@ -494,19 +494,37 @@ function cancelarEdicao(index) {
 }
 
 function salvarEdicao(index, idp) {
-  const novoNorm = normalizarProdutoLocal(novo);
-  Object.assign(p, novoNorm, { editar: false });
+  const p = produtos[ambienteAtual][index];
+  if (!p) return;
+
+  // lê valores dos inputs inline
+  const get = (s) => document.getElementById(`${idp}-${s}`)?.value ?? '';
+
+  // >>> MANTENHA O NOME 'novo' E USE ELE ATÉ O FIM <<<
+  const novo = {
+    nomeproduto: get('nome'),
+    orcamento:   get('orc'),
+    valorfinal:  get('fin'),
+    quantidade:  get('qtd'),
+    linkreferencia: get('ref'),
+    linkcompra:     get('buy')
+  };
+
+  // Atualiza local
+  Object.assign(p, novo);
+  p.editar = false;
   salvarProdutos();
   renderizarProdutos();
 
+  // Atualiza no backend
   if (p._id) {
     apiPatch(p._id, {
-      nome: novoNorm.nomeproduto,
-      orcamento: novoNorm.orcamento,
-      valorfinal: novoNorm.valorfinal,
-      quantidade: novoNorm.quantidade,
-      link_referencia: p.linkreferencia || '',
-      link_compra:     p.linkcompra     || ''
+      nome: novo.nomeproduto,
+      orcamento:   parseNumero(novo.orcamento),
+      valorfinal:   parseNumero(novo.valorfinal),
+      quantidade:   parseNumero(novo.quantidade) || 1,
+      link_referencia: novo.linkreferencia || '',
+      link_compra:     novo.linkcompra || ''
     }).catch(() => {});
   }
 }
