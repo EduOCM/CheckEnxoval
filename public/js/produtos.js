@@ -125,11 +125,11 @@ async function apiCriar(payload) {
   return r.json(); // retorna o objeto criado (com id)
 }
 async function apiRemover(id) {
-  const r = await fetch(`${API_URL}${id}`, { method: 'DELETE' });
+  const r = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
   if (!r.ok) throw new Error('Falha ao remover produto');
 }
 async function apiPatch(id, body) {
-  const r = await fetch(`${API_URL}${id}`, {
+  const r = await fetch(`${API_URL}/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
